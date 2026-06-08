@@ -4,6 +4,7 @@ import {
   getPurchases,
   createPurchase,
   updatePurchase,
+  deletePurchase,
   createPurchasePayment,
 } from "../store/slices/purchaseSlice";
 import { getDashboardStats } from "../store/slices/dashboardSlice";
@@ -39,6 +40,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 import PaymentIcon from "@mui/icons-material/Payment";
 import toast from "react-hot-toast";
 
@@ -71,9 +73,11 @@ export default function Purchases() {
   const [openDialog, setOpenDialog] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingPurchase, setEditingPurchase] = useState(null);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
+  const [purchaseToDelete, setPurchaseToDelete] = useState(null);
   const [newPurchase, setNewPurchase] = useState({
     vendorName: "",
     materialCategory: materialCategories[0],
@@ -246,6 +250,26 @@ export default function Purchases() {
     setPaymentDialogOpen(true);
   };
 
+  const handleDeleteClick = (purchase) => {
+    setPurchaseToDelete(purchase);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!purchaseToDelete) return;
+
+    try {
+      await dispatch(deletePurchase(purchaseToDelete._id)).unwrap();
+      toast.success("Purchase deleted successfully!");
+      // Refresh dashboard stats
+      dispatch(getDashboardStats());
+      setDeleteDialogOpen(false);
+      setPurchaseToDelete(null);
+    } catch (error) {
+      toast.error(error || "Failed to delete purchase");
+    }
+  };
+
   const handleUpdatePurchase = async () => {
     if (!editingPurchase.vendorName.trim()) {
       toast.error("Vendor name is required");
@@ -307,8 +331,7 @@ export default function Purchases() {
         return "success";
       case "partial":
         return "warning";
-      default:
-        return "error";
+        deandfault: return "error";
     }
   };
 
@@ -471,6 +494,15 @@ export default function Purchases() {
                         onClick={() => handlePaymentClick(purchase)}
                       >
                         <PaymentIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteClick(purchase)}
+                      >
+                        <DeleteIcon />
                       </IconButton>
                     </Tooltip>
                   </TableCell>
@@ -812,6 +844,38 @@ export default function Purchases() {
           <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleUpdatePurchase}>
             Update Purchase
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Delete Purchase</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete the purchase from{" "}
+            <strong>{purchaseToDelete?.vendorName}</strong> dated{" "}
+            <strong>
+              {purchaseToDelete?.purchaseDate
+                ? new Date(purchaseToDelete.purchaseDate).toLocaleDateString()
+                : ""}
+            </strong>
+            ? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleConfirmDelete}
+          >
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
