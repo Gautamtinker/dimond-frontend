@@ -226,10 +226,10 @@ export default function Purchases() {
       dueDate: purchase.dueDate
         ? new Date(purchase.dueDate).toISOString().split("T")[0]
         : "",
-      // Ensure packets array exists and has the right format
+      // Ensure packets array exists and has the right format (including range)
       packets:
         purchase.packets?.map((p) => ({
-          ...p,
+          range: p.range || "",
           caret: p.caret || 0,
           rate: p.rate || 0,
           amount: p.amount || 0,
@@ -331,7 +331,8 @@ export default function Purchases() {
         return "success";
       case "partial":
         return "warning";
-        deandfault: return "error";
+      default:
+        return "error";
     }
   };
 
