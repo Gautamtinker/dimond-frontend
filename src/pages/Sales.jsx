@@ -304,6 +304,9 @@ export default function Sales() {
       toast.success("Sale updated successfully!");
       setEditDialogOpen(false);
       setEditingSale(null);
+      // Refresh sales list to get updated data from server
+      dispatch(getSales({ page: page + 1, limit: rowsPerPage }));
+      dispatch(getDashboardStats());
     } catch (error) {
       toast.error(error || "Failed to update sale");
     }
