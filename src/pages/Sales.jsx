@@ -286,7 +286,7 @@ export default function Sales() {
     }
 
     try {
-      await dispatch(
+      const result = await dispatch(
         updateSale({
           id: editingSale._id,
           data: {
@@ -301,11 +301,22 @@ export default function Sales() {
           },
         }),
       ).unwrap();
+
+      // Update the local state with the returned updated sale
+      if (result) {
+        const updatedSales = sales.map((s) =>
+          s._id === result._id ? result : s,
+        );
+        dispatch({
+          type: "sales/getAll/fulfilled",
+          payload: { data: updatedSales, pagination },
+        });
+      }
+
       toast.success("Sale updated successfully!");
       setEditDialogOpen(false);
       setEditingSale(null);
-      // Refresh sales list to get updated data from server
-      dispatch(getSales({ page: page + 1, limit: rowsPerPage }));
+      // Refresh dashboard stats
       dispatch(getDashboardStats());
     } catch (error) {
       toast.error(error || "Failed to update sale");
