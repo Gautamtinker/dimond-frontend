@@ -4,6 +4,7 @@ import {
   getSales,
   createSale,
   updateSale,
+  deleteSale,
   createSalePayment,
 } from "../store/slices/saleSlice";
 import { getDashboardStats } from "../store/slices/dashboardSlice";
@@ -40,6 +41,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import PaymentIcon from "@mui/icons-material/Payment";
+import DeleteIcon from "@mui/icons-material/Delete";
 import toast from "react-hot-toast";
 
 const materialCategories = [
@@ -69,9 +71,11 @@ export default function Sales() {
   const [openDialog, setOpenDialog] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingSale, setEditingSale] = useState(null);
   const [selectedSale, setSelectedSale] = useState(null);
+  const [saleToDelete, setSaleToDelete] = useState(null);
   const [newSale, setNewSale] = useState({
     sellerName: "",
     brokerName: "",
@@ -322,6 +326,26 @@ export default function Sales() {
     }
   };
 
+  const handleDeleteClick = (sale) => {
+    setSaleToDelete(sale);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteSale = async () => {
+    if (!saleToDelete) return;
+
+    try {
+      await dispatch(deleteSale(saleToDelete._id)).unwrap();
+      toast.success("Sale deleted successfully!");
+      setDeleteDialogOpen(false);
+      setSaleToDelete(null);
+      // Refresh dashboard stats
+      dispatch(getDashboardStats());
+    } catch (error) {
+      toast.error(error || "Failed to delete sale");
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case "completed":
@@ -475,6 +499,15 @@ export default function Sales() {
                         onClick={() => handlePaymentClick(sale)}
                       >
                         <PaymentIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteClick(sale)}
+                      >
+                        <DeleteIcon />
                       </IconButton>
                     </Tooltip>
                   </TableCell>
@@ -906,6 +939,32 @@ export default function Sales() {
           <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleUpdateSale}>
             Update Sale
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this sale entry for{" "}
+            <strong>{saleToDelete?.buyerName}</strong>?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            This action cannot be undone. The sale amount of ₹
+            {saleToDelete?.netAmount?.toLocaleString()} will be removed.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleDeleteSale}>
+            Delete Sale
           </Button>
         </DialogActions>
       </Dialog>

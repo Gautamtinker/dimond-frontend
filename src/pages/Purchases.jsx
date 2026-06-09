@@ -229,12 +229,14 @@ export default function Purchases() {
       // Ensure packets array exists and has the right format (including range)
       packets:
         purchase.packets?.map((p) => ({
+          // console.log(p);
           range: p.range,
           caret: p.caret || 0,
           rate: p.rate || 0,
           amount: p.amount || 0,
         })) || [],
     };
+    console.log(purchase.packets);
     setEditingPurchase(editData);
     setEditDialogOpen(true);
   };
