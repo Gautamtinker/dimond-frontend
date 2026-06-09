@@ -85,6 +85,7 @@ export default function Sales() {
     dueDate: "",
     creditDays: 30,
     notes: "",
+    globalDeduction: 0,
     packets: [{ range: "", caret: "", rate: "", percentage: 0, amount: 0 }],
   });
   const [paymentData, setPaymentData] = useState({
@@ -146,9 +147,10 @@ export default function Sales() {
   };
 
   const getEditTotalAmount = () => {
-    return (
-      editingSale?.packets?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0
-    );
+    const subtotal =
+      editingSale?.packets?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+    const globalDeduction = parseFloat(editingSale?.globalDeduction) || 0;
+    return subtotal - (subtotal * globalDeduction) / 100;
   };
 
   const getEditTotalCaret = () => {
@@ -161,7 +163,12 @@ export default function Sales() {
   };
 
   const getTotalAmount = () => {
-    return newSale.packets.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const subtotal = newSale.packets.reduce(
+      (sum, p) => sum + (p.amount || 0),
+      0,
+    );
+    const globalDeduction = parseFloat(newSale.globalDeduction) || 0;
+    return subtotal - (subtotal * globalDeduction) / 100;
   };
 
   const getTotalCaret = () => {
@@ -181,6 +188,7 @@ export default function Sales() {
       dueDate: "",
       creditDays: 30,
       notes: "",
+      globalDeduction: 0,
       packets: [{ range: "", caret: "", rate: "", percentage: 0, amount: 0 }],
     });
   };
@@ -207,6 +215,7 @@ export default function Sales() {
         dueDate: newSale.dueDate || newSale.saleDate,
         creditDays: newSale.creditDays,
         notes: newSale.notes,
+        globalDeduction: parseFloat(newSale.globalDeduction) || 0,
         packets: validPackets.map((p) => ({
           range: p.range,
           caret: parseFloat(p.caret),
@@ -245,6 +254,7 @@ export default function Sales() {
       dueDate: sale.dueDate
         ? new Date(sale.dueDate).toISOString().split("T")[0]
         : "",
+      globalDeduction: sale.globalDeduction || 0,
       packets:
         sale.packets?.map((p) => ({
           ...p,
@@ -287,6 +297,7 @@ export default function Sales() {
             dueDate: editingSale.dueDate,
             creditDays: editingSale.creditDays,
             notes: editingSale.notes,
+            globalDeduction: parseFloat(editingSale.globalDeduction) || 0,
           },
         }),
       ).unwrap();
@@ -702,6 +713,22 @@ export default function Sales() {
                 Add Packet
               </Button>
             </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Global Deduction %"
+                value={newSale.globalDeduction}
+                onChange={(e) =>
+                  setNewSale({
+                    ...newSale,
+                    globalDeduction: e.target.value,
+                  })
+                }
+                InputProps={{ inputProps: { min: 0, max: 100, step: 0.1 } }}
+                helperText="Additional deduction from total amount"
+              />
+            </Grid>
             <Grid item xs={12}>
               <Box
                 display="flex"
@@ -714,7 +741,7 @@ export default function Sales() {
                   Total Caret: {getTotalCaret()?.toFixed(2)} ct
                 </Typography>
                 <Typography variant="h6" color="primary">
-                  Total Amount: ₹{getTotalAmount()?.toLocaleString()}
+                  Final Amount: ₹{getTotalAmount()?.toLocaleString()}
                 </Typography>
               </Box>
             </Grid>
@@ -830,6 +857,22 @@ export default function Sales() {
                 }
               />
             </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Global Deduction %"
+                value={editingSale?.globalDeduction || 0}
+                onChange={(e) =>
+                  setEditingSale({
+                    ...editingSale,
+                    globalDeduction: e.target.value,
+                  })
+                }
+                InputProps={{ inputProps: { min: 0, max: 100, step: 0.1 } }}
+                helperText="Additional deduction from total amount"
+              />
+            </Grid>
             <Grid item xs={12}>
               <Typography variant="subtitle1" gutterBottom>
                 Packets
@@ -914,7 +957,7 @@ export default function Sales() {
                   Total Caret: {getEditTotalCaret()?.toFixed(2)} ct
                 </Typography>
                 <Typography variant="h6" color="primary">
-                  Total Amount: ₹{getEditTotalAmount()?.toLocaleString()}
+                  Final Amount: ₹{getEditTotalAmount()?.toLocaleString()}
                 </Typography>
               </Box>
             </Grid>
