@@ -54,8 +54,6 @@ export default function Approvals() {
   const { approvals, pagination, loading } = useSelector(
     (state) => state.approvals,
   );
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -77,14 +75,9 @@ export default function Approvals() {
   });
 
   useEffect(() => {
-    dispatch(getApprovals({ page: page + 1, limit: rowsPerPage }));
-  }, [dispatch, page, rowsPerPage]);
-
-  const handleChangePage = (event, newPage) => setPage(newPage);
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+    // Fetch all approvals (large limit to get all entries)
+    dispatch(getApprovals({ limit: 10000 }));
+  }, [dispatch]);
 
   const handleAddApproval = () => {
     setOpenDialog(true);
@@ -314,7 +307,6 @@ export default function Approvals() {
         value={searchTerm}
         onChange={(e) => {
           setSearchTerm(e.target.value);
-          setPage(0);
         }}
         InputProps={{
           startAdornment: (
@@ -341,57 +333,46 @@ export default function Approvals() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredApprovals
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((approval) => {
-                const totalCaret = approval.materials
-                  ?.reduce((sum, m) => sum + (m.caret || 0), 0)
-                  ?.toFixed(2);
-                const totalAmount = approval.materials
-                  ?.reduce((sum, m) => sum + (m.amount || 0), 0)
-                  ?.toLocaleString();
-                return (
-                  <TableRow key={approval._id} hover>
-                    <TableCell>
-                      {new Date(approval.dateSent).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>{approval.brokerName}</TableCell>
-                    <TableCell align="right">{totalCaret} ct</TableCell>
-                    <TableCell align="right">₹{totalAmount}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={approval.status}
-                        color={getStatusColor(approval.status)}
+            {filteredApprovals.map((approval) => {
+              const totalCaret = approval.materials
+                ?.reduce((sum, m) => sum + (m.caret || 0), 0)
+                ?.toFixed(2);
+              const totalAmount = approval.materials
+                ?.reduce((sum, m) => sum + (m.amount || 0), 0)
+                ?.toLocaleString();
+              return (
+                <TableRow key={approval._id} hover>
+                  <TableCell>
+                    {new Date(approval.dateSent).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>{approval.brokerName}</TableCell>
+                  <TableCell align="right">{totalCaret} ct</TableCell>
+                  <TableCell align="right">₹{totalAmount}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={approval.status}
+                      color={getStatusColor(approval.status)}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>{approval.remarks || "-"}</TableCell>
+                  <TableCell align="center">
+                    <Tooltip title="Edit">
+                      <IconButton
                         size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{approval.remarks || "-"}</TableCell>
-                    <TableCell align="center">
-                      <Tooltip title="Edit">
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={() => handleEditApproval(approval)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                        color="primary"
+                        onClick={() => handleEditApproval(approval)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
-
-      <TablePagination
-        component="div"
-        count={pagination.total || 0}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
 
       {/* Add Approval Dialog */}
       <Dialog

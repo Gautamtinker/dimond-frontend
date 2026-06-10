@@ -66,8 +66,6 @@ const paymentModes = [
 export default function Sales() {
   const dispatch = useDispatch();
   const { sales, loading, pagination } = useSelector((state) => state.sales);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [openDialog, setOpenDialog] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -97,17 +95,9 @@ export default function Sales() {
   });
 
   useEffect(() => {
-    dispatch(getSales({ page: page + 1, limit: rowsPerPage }));
-  }, [dispatch, page, rowsPerPage]);
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+    // Fetch all sales (large limit to get all entries)
+    dispatch(getSales({ limit: 10000 }));
+  }, [dispatch]);
 
   const handleAddPacket = () => {
     setNewSale({
@@ -388,7 +378,7 @@ export default function Sales() {
       toast.success("Payment received successfully!");
       // Refresh dashboard stats and sales list
       dispatch(getDashboardStats());
-      dispatch(getSales({ page: page + 1, limit: rowsPerPage }));
+      dispatch(getSales({ limit: 10000 }));
       setPaymentDialogOpen(false);
       setSelectedSale(null);
     } catch (error) {
@@ -534,7 +524,6 @@ export default function Sales() {
                   ) || false;
                 return sellerMatch || brokerMatch;
               })
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((sale) => (
                 <TableRow key={sale._id} hover>
                   <TableCell>
@@ -598,15 +587,6 @@ export default function Sales() {
           </TableBody>
         </Table>
       </TableContainer>
-
-      <TablePagination
-        component="div"
-        count={pagination.total || 0}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
 
       {/* Add Sale Dialog */}
       <Dialog

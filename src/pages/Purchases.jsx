@@ -68,8 +68,6 @@ export default function Purchases() {
   const { purchases, loading, pagination } = useSelector(
     (state) => state.purchases,
   );
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [openDialog, setOpenDialog] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -95,17 +93,9 @@ export default function Purchases() {
   const [initialAmount, setInitialAmount] = useState(0); // Start with 0 for actual use
 
   useEffect(() => {
-    dispatch(getPurchases({ page: page + 1, limit: rowsPerPage }));
-  }, [dispatch, page, rowsPerPage]);
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+    // Fetch all purchases (large limit to get all entries)
+    dispatch(getPurchases({ limit: 10000 }));
+  }, [dispatch]);
 
   const handleAddPacket = () => {
     setNewPurchase({
@@ -319,7 +309,7 @@ export default function Purchases() {
       toast.success("Payment added successfully!");
       // Refresh dashboard stats and purchases list
       dispatch(getDashboardStats());
-      dispatch(getPurchases({ page: page + 1, limit: rowsPerPage }));
+      dispatch(getPurchases({ limit: 10000 }));
       setPaymentDialogOpen(false);
       setSelectedPurchase(null);
     } catch (error) {
@@ -453,7 +443,6 @@ export default function Purchases() {
               .filter((p) =>
                 p.vendorName.toLowerCase().includes(searchTerm.toLowerCase()),
               )
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((purchase) => (
                 <TableRow key={purchase._id} hover>
                   <TableCell>
@@ -514,15 +503,6 @@ export default function Purchases() {
           </TableBody>
         </Table>
       </TableContainer>
-
-      <TablePagination
-        component="div"
-        count={pagination.total || 0}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
 
       {/* Add Purchase Dialog */}
       <Dialog
