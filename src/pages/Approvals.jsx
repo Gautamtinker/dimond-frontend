@@ -4,6 +4,7 @@ import {
   getApprovals,
   createApproval,
   updateApproval,
+  deleteApproval,
 } from "../store/slices/approvalSlice";
 import {
   Box,
@@ -57,7 +58,9 @@ export default function Approvals() {
   const [searchTerm, setSearchTerm] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingApproval, setEditingApproval] = useState(null);
+  const [approvalToDelete, setApprovalToDelete] = useState(null);
   const [newApproval, setNewApproval] = useState({
     brokerName: "",
     brokerPhone: "",
@@ -117,6 +120,24 @@ export default function Approvals() {
         })) || [],
     });
     setEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = (approval) => {
+    setApprovalToDelete(approval);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteApproval = async () => {
+    if (!approvalToDelete) return;
+
+    try {
+      await dispatch(deleteApproval(approvalToDelete._id)).unwrap();
+      toast.success("Approval deleted successfully!");
+      setDeleteDialogOpen(false);
+      setApprovalToDelete(null);
+    } catch (error) {
+      toast.error(error || "Failed to delete approval");
+    }
   };
 
   const handleEditMaterialChange = (index, field, value) => {
@@ -366,6 +387,15 @@ export default function Approvals() {
                         <EditIcon />
                       </IconButton>
                     </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteClick(approval)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               );
@@ -563,6 +593,35 @@ export default function Approvals() {
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button variant="contained" onClick={handleSubmit} disabled={loading}>
             {loading ? "Creating..." : "Create Approval"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this approval entry for{" "}
+            <strong>{approvalToDelete?.brokerName}</strong>?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleDeleteApproval}
+          >
+            Delete Approval
           </Button>
         </DialogActions>
       </Dialog>
