@@ -447,7 +447,7 @@ export default function Sales() {
 
       <TextField
         fullWidth
-        placeholder="Search by seller name..."
+        placeholder="Search by seller or broker name..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         InputProps={{
@@ -466,6 +466,7 @@ export default function Sales() {
             <TableRow>
               <TableCell>Date</TableCell>
               <TableCell>Seller</TableCell>
+              <TableCell>Broker</TableCell>
               <TableCell>Category</TableCell>
               <TableCell align="right">Caret</TableCell>
               <TableCell align="right">Amount</TableCell>
@@ -477,9 +478,17 @@ export default function Sales() {
           </TableHead>
           <TableBody>
             {sales
-              .filter((s) =>
-                s.buyerName.toLowerCase().includes(searchTerm.toLowerCase()),
-              )
+              .filter((s) => {
+                const sellerMatch =
+                  s.buyerName
+                    ?.toLowerCase()
+                    .includes(searchTerm.toLowerCase()) || false;
+                const brokerMatch =
+                  s.brokers?.some((b) =>
+                    b.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+                  ) || false;
+                return sellerMatch || brokerMatch;
+              })
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((sale) => (
                 <TableRow key={sale._id} hover>
@@ -487,6 +496,9 @@ export default function Sales() {
                     {new Date(sale.saleDate).toLocaleDateString()}
                   </TableCell>
                   <TableCell>{sale.buyerName}</TableCell>
+                  <TableCell>
+                    {sale.brokers?.map((b) => b.name).join(", ") || "-"}
+                  </TableCell>
                   <TableCell>{sale.materialCategory}</TableCell>
                   <TableCell align="right">
                     {sale.totalCaret?.toFixed(2)} ct
