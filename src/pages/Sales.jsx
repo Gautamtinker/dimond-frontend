@@ -86,6 +86,7 @@ export default function Sales() {
     creditDays: 30,
     notes: "",
     globalDeduction: 0,
+    out: 0,
     packets: [{ range: "", caret: "", rate: "", percentage: 0, amount: 0 }],
   });
   const [paymentData, setPaymentData] = useState({
@@ -162,6 +163,12 @@ export default function Sales() {
     );
   };
 
+  const getEditNetCaret = () => {
+    const totalCaret = getEditTotalCaret();
+    const out = parseFloat(editingSale?.out) || 0;
+    return totalCaret - out;
+  };
+
   const getTotalAmount = () => {
     const subtotal = newSale.packets.reduce(
       (sum, p) => sum + (p.amount || 0),
@@ -178,6 +185,12 @@ export default function Sales() {
     );
   };
 
+  const getNetCaret = () => {
+    const totalCaret = getTotalCaret();
+    const out = parseFloat(newSale.out) || 0;
+    return totalCaret - out;
+  };
+
   const resetSaleForm = () => {
     setNewSale({
       sellerName: "",
@@ -189,6 +202,7 @@ export default function Sales() {
       creditDays: 30,
       notes: "",
       globalDeduction: 0,
+      out: 0,
       packets: [{ range: "", caret: "", rate: "", percentage: 0, amount: 0 }],
     });
   };
@@ -216,6 +230,7 @@ export default function Sales() {
         creditDays: newSale.creditDays,
         notes: newSale.notes,
         globalDeduction: parseFloat(newSale.globalDeduction) || 0,
+        out: parseFloat(newSale.out) || 0,
         packets: validPackets.map((p) => ({
           range: p.range,
           caret: parseFloat(p.caret),
@@ -255,6 +270,7 @@ export default function Sales() {
         ? new Date(sale.dueDate).toISOString().split("T")[0]
         : "",
       globalDeduction: sale.globalDeduction || 0,
+      out: sale.out || 0,
       packets:
         sale.packets?.map((p) => ({
           ...p,
@@ -298,6 +314,7 @@ export default function Sales() {
             creditDays: editingSale.creditDays,
             notes: editingSale.notes,
             globalDeduction: parseFloat(editingSale.globalDeduction) || 0,
+            out: parseFloat(editingSale.out) || 0,
           },
         }),
       ).unwrap();
@@ -755,6 +772,22 @@ export default function Sales() {
                 helperText="Additional deduction from total amount"
               />
             </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Out (Caret)"
+                value={newSale.out}
+                onChange={(e) =>
+                  setNewSale({
+                    ...newSale,
+                    out: e.target.value,
+                  })
+                }
+                InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                helperText="Deduct from total caret"
+              />
+            </Grid>
             <Grid item xs={12}>
               <Box
                 display="flex"
@@ -763,9 +796,19 @@ export default function Sales() {
                 bgcolor="action.hover"
                 borderRadius={1}
               >
-                <Typography variant="h6">
-                  Total Caret: {getTotalCaret()?.toFixed(2)} ct
-                </Typography>
+                <Box>
+                  <Typography variant="h6">
+                    Total Caret: {getTotalCaret()?.toFixed(2)} ct
+                  </Typography>
+                  {parseFloat(newSale.out) > 0 && (
+                    <Typography variant="body2" color="error">
+                      Out: -{parseFloat(newSale.out).toFixed(2)} ct
+                    </Typography>
+                  )}
+                  <Typography variant="h6" color="primary">
+                    Net Caret: {getNetCaret()?.toFixed(2)} ct
+                  </Typography>
+                </Box>
                 <Typography variant="h6" color="primary">
                   Final Amount: ₹{getTotalAmount()?.toLocaleString()}
                 </Typography>
@@ -899,6 +942,22 @@ export default function Sales() {
                 helperText="Additional deduction from total amount"
               />
             </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Out (Caret)"
+                value={editingSale?.out || 0}
+                onChange={(e) =>
+                  setEditingSale({
+                    ...editingSale,
+                    out: e.target.value,
+                  })
+                }
+                InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                helperText="Deduct from total caret"
+              />
+            </Grid>
             <Grid item xs={12}>
               <Typography variant="subtitle1" gutterBottom>
                 Packets
@@ -979,9 +1038,19 @@ export default function Sales() {
                 bgcolor="action.hover"
                 borderRadius={1}
               >
-                <Typography variant="h6">
-                  Total Caret: {getEditTotalCaret()?.toFixed(2)} ct
-                </Typography>
+                <Box>
+                  <Typography variant="h6">
+                    Total Caret: {getEditTotalCaret()?.toFixed(2)} ct
+                  </Typography>
+                  {parseFloat(editingSale?.out) > 0 && (
+                    <Typography variant="body2" color="error">
+                      Out: -{parseFloat(editingSale?.out).toFixed(2)} ct
+                    </Typography>
+                  )}
+                  <Typography variant="h6" color="primary">
+                    Net Caret: {getEditNetCaret()?.toFixed(2)} ct
+                  </Typography>
+                </Box>
                 <Typography variant="h6" color="primary">
                   Final Amount: ₹{getEditTotalAmount()?.toLocaleString()}
                 </Typography>
