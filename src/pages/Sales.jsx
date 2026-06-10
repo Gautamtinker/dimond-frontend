@@ -147,11 +147,24 @@ export default function Sales() {
     setEditingSale({ ...editingSale, packets: updatedPackets });
   };
 
+  const getEditAverageRate = () => {
+    const totalCaret = getEditTotalCaret();
+    if (totalCaret === 0) return 0;
+    const totalAmount =
+      editingSale?.packets?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+    return totalAmount / totalCaret;
+  };
+
   const getEditTotalAmount = () => {
     const subtotal =
       editingSale?.packets?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
     const globalDeduction = parseFloat(editingSale?.globalDeduction) || 0;
-    return subtotal - (subtotal * globalDeduction) / 100;
+    const amountAfterGlobalDeduction =
+      subtotal - (subtotal * globalDeduction) / 100;
+    const out = parseFloat(editingSale?.out) || 0;
+    const averageRate = getEditAverageRate();
+    const outAmount = out * averageRate;
+    return amountAfterGlobalDeduction - outAmount;
   };
 
   const getEditTotalCaret = () => {
@@ -169,13 +182,28 @@ export default function Sales() {
     return totalCaret - out;
   };
 
+  const getAverageRate = () => {
+    const totalCaret = getTotalCaret();
+    if (totalCaret === 0) return 0;
+    const totalAmount = newSale.packets.reduce(
+      (sum, p) => sum + (p.amount || 0),
+      0,
+    );
+    return totalAmount / totalCaret;
+  };
+
   const getTotalAmount = () => {
     const subtotal = newSale.packets.reduce(
       (sum, p) => sum + (p.amount || 0),
       0,
     );
     const globalDeduction = parseFloat(newSale.globalDeduction) || 0;
-    return subtotal - (subtotal * globalDeduction) / 100;
+    const amountAfterGlobalDeduction =
+      subtotal - (subtotal * globalDeduction) / 100;
+    const out = parseFloat(newSale.out) || 0;
+    const averageRate = getAverageRate();
+    const outAmount = out * averageRate;
+    return amountAfterGlobalDeduction - outAmount;
   };
 
   const getTotalCaret = () => {
